@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI", "LANPartyAPI\LANPartyAPI.csproj", "{9F2E2881-6B2C-492B-9EB2-FCCDEA36806E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI_Core", "LanPartyAPI.Core\LANPartyAPI_Core.csproj", "{8F5543F2-A228-4AA6-BB80-9329067AA1D7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI_DataAccess", "LanPartyAPI.DataAccess\LANPartyAPI_DataAccess.csproj", "{64D333CD-6F0B-49F0-BC2D-EADDEE15E56D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI_Services", "LANPartyAPI_Services\LANPartyAPI_Services.csproj", "{39C1F923-9E1E-4C38-8CDF-C4F733250FA6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI_Utils", "LANPartyAPI_Utils\LANPartyAPI_Utils.csproj", "{F931E3C1-24DD-4F77-BBFD-2B63266C7A9C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LANPartyAPI_Services_Tests", "LANPartyAPI_Services_Tests\LANPartyAPI_Services_Tests.csproj", "{6EE926D8-FF15-4F00-9B88-5454A02E67D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F2E2881-6B2C-492B-9EB2-FCCDEA36806E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F2E2881-6B2C-492B-9EB2-FCCDEA36806E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F2E2881-6B2C-492B-9EB2-FCCDEA36806E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F2E2881-6B2C-492B-9EB2-FCCDEA36806E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F5543F2-A228-4AA6-BB80-9329067AA1D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F5543F2-A228-4AA6-BB80-9329067AA1D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F5543F2-A228-4AA6-BB80-9329067AA1D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F5543F2-A228-4AA6-BB80-9329067AA1D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64D333CD-6F0B-49F0-BC2D-EADDEE15E56D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64D333CD-6F0B-49F0-BC2D-EADDEE15E56D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64D333CD-6F0B-49F0-BC2D-EADDEE15E56D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64D333CD-6F0B-49F0-BC2D-EADDEE15E56D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39C1F923-9E1E-4C38-8CDF-C4F733250FA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39C1F923-9E1E-4C38-8CDF-C4F733250FA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39C1F923-9E1E-4C38-8CDF-C4F733250FA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39C1F923-9E1E-4C38-8CDF-C4F733250FA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F931E3C1-24DD-4F77-BBFD-2B63266C7A9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F931E3C1-24DD-4F77-BBFD-2B63266C7A9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F931E3C1-24DD-4F77-BBFD-2B63266C7A9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F931E3C1-24DD-4F77-BBFD-2B63266C7A9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EE926D8-FF15-4F00-9B88-5454A02E67D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EE926D8-FF15-4F00-9B88-5454A02E67D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EE926D8-FF15-4F00-9B88-5454A02E67D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EE926D8-FF15-4F00-9B88-5454A02E67D9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {577D7F35-A9BF-4E4B-85AA-BD135BBE7A00}
+	EndGlobalSection
+EndGlobal
