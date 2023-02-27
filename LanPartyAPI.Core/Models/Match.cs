@@ -21,7 +21,7 @@ namespace LANPartyAPI_Core.Models
         public int TournamentId { get; set; }
         public Tournament Tournament { get; set; }
 
-        public List<Match_Team> Matches_Teams { get; set; } = new();
+        //public List<Match_Team> Matches_Teams { get; set; } = new();
 
     }
 }

@@ -24,13 +24,10 @@ namespace LANPartyAPI_Core.Models
         [MaxLength(1000)]
         public string Description { get; set; }
 
-        public Picture  PlanPicture { get; set; }
-
         public List<Tournament> Tournaments { get; set; } = new();
         
         public List<ApplicationUser> Players { get; set; } = new();
 
-		public List<Seat> Seats { get; set; } = new();
 
     }
 }

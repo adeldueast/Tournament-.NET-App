@@ -1,7 +1,6 @@
+using Challonge.Extensions.DependencyInjection;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Util;
-using LANPartyAPI.DbSeeder;
 using LANPartyAPI.Filters;
 using LANPartyAPI.OptionsSettings;
 using LANPartyAPI_Core.Models;
@@ -20,13 +19,10 @@ initFirebaseAdminSDK();
 builder.Services.AddControllers(options => options.Filters.Add<HttpResponseExceptionFilter>());
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ITournamentsService, TournamentsService>();
-builder.Services.AddScoped<ISeatService, SeatService>();
-builder.Services.AddScoped<IPictureService, PictureService>();
 builder.Services.AddScoped<TeamService, TeamService>();
 
-
+builder.Services.AddChallonge("adeldueast", "vdKadDgnF4Vq38VlcQbqJsyzNtvdTuhmDsZ3TquU");
 
 builder.Services.AddCors(options =>
 {
@@ -49,7 +45,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 });
 
 
-builder.Services.AddAuthentication(o => o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+
+})
 .AddJwtBearer(options =>
 {
     var projectId = "lanpartye01";
@@ -72,11 +74,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
-//    SeedData.Initialize(services);
-//}
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
@@ -84,9 +81,6 @@ app.UseHttpsRedirection();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    //Error-Handling : https://www.c-sharpcorner.com/article/exception-handling-4-in-asp-net-core-mvc/
-    //Approach 1?
-    //app.UseDeveloperExceptionPage();
 
     app.UseExceptionHandler("/error-development");
 

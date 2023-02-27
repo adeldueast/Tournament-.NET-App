@@ -1,10 +1,7 @@
-﻿using LANPartyAPI_Core.Enums;
-using System;
-using System.Collections.Generic;
+﻿using Challonge.Objects;
+using LANPartyAPI_Core.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TournamentType = LANPartyAPI_Core.Enums.TournamentType;
 
 namespace LANPartyAPI_Services.DTOs
 {
@@ -13,25 +10,26 @@ namespace LANPartyAPI_Services.DTOs
         public int Id { get; set; }
 
         [Required(ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentNameRequired)]
-        [MaxLength(250, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentNameTooLong)]
+        [MaxLength(60, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentNameTooLong)]
         public string Name { get; set; }
 
         [MaxLength(1000, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentDescriptionTooLong)]
         public string Description { get; set; }
 
         [Required(ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentGameRequired)]
-        [MaxLength(250, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentGameTooLong)]
+        [MaxLength(100, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentGameTooLong)]
         public string Game { get; set; }
 
+        [Required]
         [Range(1, 5, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentPlayersPerTeamNumberNotInRange)]
-        public int? PlayersPerTeamNumber { get; set; }
+        public int? MaxPlayersPerTeam { get; set; }
 
+        [Required]
         [Range(1, 100, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentMaxTeamNumberNotInRange)]
         public int? MaxTeamNumber { get; set; }
 
         [Required(ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentEliminationModeRequired)]
-        [Range(0, 2, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentEliminationModeNotInRange)]
-        public EliminationTypes? EliminationMode { get; set; }
+        public TournamentType? TournamentType { get; set; }
 
         [Required(ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentEventIdRequired)]
         public int? EventId { get; set; }
@@ -39,7 +37,7 @@ namespace LANPartyAPI_Services.DTOs
 
     public class TournamentResponseDTO
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         public string Name { get; set; }
 
@@ -47,11 +45,11 @@ namespace LANPartyAPI_Services.DTOs
 
         public string Game { get; set; }
 
-        public int? PlayersPerTeamNumber { get; set; }
+        public int MaxPlayersPerTeam { get; set; }
 
-        public int? MaxTeamNumber { get; set; }
+        public int MaxTeamNumber { get; set; }
 
-        public EliminationTypes EliminationMode { get; set; }
+        public TournamentType TournamentType { get; set; }
 
         public int EventId { get; set; }
 

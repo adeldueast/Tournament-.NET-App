@@ -18,6 +18,5 @@ namespace LANPartyAPI_Core.Models
 
         public List<Team> Teams { get; set; } = new();
 
-        public List<Seat> Seats { get; set; } = new();
     }
 }

@@ -51,7 +51,7 @@ namespace LANPartyAPI_Services
 					GamerTag = p.UserName,
 
 				}).ToList(),
-				isFull = t.Players.Count == t.Tournament.PlayersPerTeamNumber
+				isFull = t.Players.Count == t.Tournament.MaxPlayersPerTeam
 				
 			}).ToList();
 

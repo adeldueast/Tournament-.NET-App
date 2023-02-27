@@ -18,14 +18,10 @@ namespace LANPartyAPI_Services
     public class EventService :IEventService
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly ISeatService _seatService;
-        private readonly IPictureService _pictureService;
 
-        public EventService(ApplicationDbContext dbContext, ISeatService seatService, IPictureService pictureService)
+        public EventService(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
-            _seatService = seatService;
-            _pictureService = pictureService;
         }
 
 
@@ -79,9 +75,6 @@ namespace LANPartyAPI_Services
             return existingEventDto;
         }
 
-		/// <exception cref="EventNameTakenException"></exception>
-		/// <exception cref="EventInvalidDatesException"></exception>
-		/// <exception cref="EventNotFoundException"></exception>
         public async Task<EventResponseDTO> Upsert(EventUpsertDTO eventToUpsert)
         {
 
@@ -156,7 +149,6 @@ namespace LANPartyAPI_Services
 
         }
 
-		/// <exception cref="EventNotFoundException"></exception>
         public async Task DeleteEvent(int eventId)
         {
             var eventToDelete = await _dbContext.Events.FindAsync(eventId);
@@ -171,62 +163,8 @@ namespace LANPartyAPI_Services
 
         }
 
-		/// <exception cref="EventNotFoundException"></exception>
-		/// <exception cref="NoSeatsGivenException"></exception>
-        public virtual async Task UpsertPlanLayout(SeatsUpsertDTO seatsUpsertDTO)
-        {
+       
 
-            var e = await _dbContext.Events
-                .Include(e => e.Seats)
-                .Include(e => e.PlanPicture)
-                .FirstOrDefaultAsync(e => e.Id == seatsUpsertDTO.EventId);
-
-            if (e == null)
-            {
-                throw new EventNotFoundException(); 
-            }
-
-            //Must provide seats
-            if (!seatsUpsertDTO.Seats.Any())
-            {
-                throw new NoSeatsGivenException();
-            }
-
-			bool isUpdate = e.Seats.Any() && e.PlanPicture != null;
-			bool updateOnlySeat = seatsUpsertDTO.File == null;
-
-			//Update: because seats AND picture already exist for Event
-			if (isUpdate && updateOnlySeat)
-            {
-				_seatService.Upsert(e, seatsUpsertDTO.Seats);
-				////Only update seats
-				//if ()
-    //            {
-                    
-    //            }
-    //            //Only update photo (but seats are always included so 
-    //            else
-    //            {
-    //                await _pictureService.PlanPictureUpsert(seatsUpsertDTO.File, e);
-    //                await _seatService.Upsert(e, seatsUpsertDTO.Seats);
-    //            }
-
-            }
-            //Create: because seats AND picture both dont exist, so we create 
-            else
-            {
-                await _pictureService.PlanPictureUpsert(seatsUpsertDTO.File, e);
-                _seatService.Upsert(e, seatsUpsertDTO.Seats);
-            }
-
-            await _dbContext.SaveChangesAsync();
-
-        }
-
-		/// <exception cref="EventNotFoundException"></exception>
-		/// <exception cref="UserNotFoundException"></exception>
-		/// <exception cref="UserAlreadyJoinedEventException"></exception>
-		/// <exception cref="EventMaxPlayersNumberReachedException"></exception>
         public async Task JoinEvent(string userId, int eventId)
         {
             var eventToJoin = await _dbContext.Events
@@ -267,7 +205,6 @@ namespace LANPartyAPI_Services
         public  Task<EventResponseDTO> GetEvent(int id, string userId);
         public  Task<EventResponseDTO> Upsert(EventUpsertDTO eventToUpsert);
         public  Task DeleteEvent(int eventId);
-        public  Task UpsertPlanLayout(SeatsUpsertDTO seatsUpsertDTO);
         public  Task JoinEvent(string userId, int eventId);
     }
 }

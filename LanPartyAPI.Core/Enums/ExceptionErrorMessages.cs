@@ -64,24 +64,7 @@ namespace LANPartyAPI_Core.Enums
 
         }
 
-        public static class SeatExceptions
-		{
-			public const string SeatNotFound = $"{nameof(Seat)}NotFound";
-			public const string SeatAlreadyExist = $"{nameof(Seat)}AlreadyExist";
-			public const string SeatPrefixRequired = $"{nameof(Seat)}PrefixRequired";
-			public const string SeatPositionRequired = $"{nameof(Seat)}PositionRequired";
-			public const string SeatEventIdRequired = $"{nameof(Seat)}EventIdRequired";
-			public const string SeatDuplicateId = $"{nameof(Seat)}DuplicateId";
-			public const string SeatDuplicatePosition = $"{nameof(Seat)}DuplicatePosition";
-            public const string SeatAlreadyReserved = $"{nameof(Seat)}AlreadyReserved";
-            public const string NoSeatsGiven = $"NoSeatsGiven";
-        }
-
-        public static class PictureExceptions
-        {
-            public const string PictureNotFound = $"{nameof(Picture)}NotFound";
-            public const string NoFileGiven = $"InvalidPicture";
-        }
+ 
 
 		public static class UserExceptions
 		{

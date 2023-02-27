@@ -1,222 +1,184 @@
-using LANPartyAPI_Core.Enums;
+using Challonge.Api;
+using Challonge.Objects;
 using LANPartyAPI_Core.Exceptions;
 using LANPartyAPI_Core.Models;
 using LANPartyAPI_DataAccess.Data;
 using LANPartyAPI_Services.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
+using challongeTournament = Challonge.Objects.Tournament;
+using Tournament = LANPartyAPI_Core.Models.Tournament;
 
 namespace LANPartyAPI_Services
 {
     public interface ITournamentsService
     {
-        public Task<List<TournamentResponseDTO>> GetEventTournaments(int eventId, string userId);
-
-        public Task<List<TournamentResponseDTO>> GetAllTournaments(string userId);
-
-        public Task<TournamentResponseDTO> GetTournament(int id, string userId);
-
-        public Task<TournamentResponseDTO> Upsert(TournamentUpsertDTO tournamentToUpsert);
-
-
-        /// <exception cref="TournamentNotFoundException"></exception>
-        /// <exception cref="TeamLimitReachedException"></exception>
-        /// <exception cref="UserNotInEventException"></exception>
-        /// <exception cref="UserAlreadyJoinedTournamentException"></exception>
-        /// <exception cref="TeamNameAlreadyTakenException"></exception>
+        public Task<object> UpsertTournament(TournamentUpsertDTO tournamentUpsertDTO);
+        public Task<object> GetTournament(int tournamentId);
+        public Task<object> GetAllEventTournaments(int eventId);
+        public Task DeleteTournament(int tournamentId);
         public Task JoinTournamentCreateTeam(TeamUpsertDTO teamUpsert, string userId);
-
-
-        /// <exception cref="TeamNotFoundException"></exception>
-        /// <exception cref="UserNotInEventException"></exception>
-        /// <exception cref="UserAlreadyJoinedTournamentException"></exception>
-        /// <exception cref="TeamPlayersLimitReachedException"></exception>
         public Task JoinTournamentExistingTeam(int teamId, string userId);
-
-
-        /// <exception cref="TournamentNotFoundException"></exception>
-        /// <exception cref="UserNotInTournamentException"></exception>
         public Task QuitTournament(string userId, int tournamentId);
     }
     public class TournamentsService : ITournamentsService
     {
 
-        private readonly ApplicationDbContext _dbContext;
+        public readonly ApplicationDbContext _dbContext;
+        private readonly IChallongeClient _client;
 
-        public TournamentsService(ApplicationDbContext dbContext) => _dbContext = dbContext;
-
-        /// <exception cref="EventNotFoundException"></exception>
-        public async Task<List<TournamentResponseDTO>> GetEventTournaments(int eventId, string userId)
+        public TournamentsService(ApplicationDbContext dbContext, IChallongeClient client)
         {
-            var e = await _dbContext.Events
-                .AsNoTracking()
-                .Include(e => e.Tournaments.OrderBy(t => t.Name))
-                .ThenInclude(t => t.Teams)
-                .ThenInclude(t => t.Players)
-                .FirstOrDefaultAsync(e => e.Id == eventId);
+            _dbContext = dbContext;
+            _client = client;
+        }
 
-            if (e == null)
-            {
+        public async Task<object> UpsertTournament(TournamentUpsertDTO tournamentUpsertDTO)
+        {
+
+            var eventExist = await _dbContext.Events.AnyAsync(e => e.Id == tournamentUpsertDTO.EventId);
+            if (!eventExist)
                 throw new EventNotFoundException();
-            }
 
+            var domainTournament = tournamentUpsertDTO.Id == 0
+                ? await _dbContext.Tournaments.FirstOrDefaultAsync(t => t.Name == tournamentUpsertDTO.Name)
+                : await _dbContext.Tournaments.FirstOrDefaultAsync(t => t.Name == tournamentUpsertDTO.Name && t.Id != tournamentUpsertDTO.Id);
 
-            List<TournamentResponseDTO> tournamentsDtos = e.Tournaments.Select(t => new TournamentResponseDTO
-            {
-                Id = t.Id,
-                Name = t.Name,
-                Game = t.Game,
-                MaxTeamNumber = t.MaxTeamNumber,
-                PlayersPerTeamNumber = t.PlayersPerTeamNumber,
-                Description = t.Description,
-                EliminationMode = t.EliminationMode,
-                EventId = t.EventId,
-                hasJoined = string.IsNullOrEmpty(userId) ? false : t.Teams.SelectMany(t => t.Players).Select(p => p.Id).Any(p => p == userId)
-
-            }).ToList();
-
-
-            return tournamentsDtos;
-        }
-
-        public async Task<List<TournamentResponseDTO>> GetAllTournaments(string userId)
-        {
-            var tournaments = await _dbContext.Tournaments
-                .OrderBy(t => t.Name)
-                .Include(t => t.Teams)
-                .ThenInclude(t => t.Players)
-                .AsNoTracking()
-                .ToListAsync();
-
-            List<TournamentResponseDTO> tournamentsDtos = tournaments.Select(t => new TournamentResponseDTO
-            {
-                Id = t.Id,
-                Name = t.Name,
-                Game = t.Game,
-                MaxTeamNumber = t.MaxTeamNumber,
-                PlayersPerTeamNumber = t.PlayersPerTeamNumber,
-                Description = t.Description,
-                EliminationMode = t.EliminationMode,
-                EventId = t.EventId,
-                hasJoined = string.IsNullOrEmpty(userId) ? false : t.Teams.SelectMany(t => t.Players).Select(p => p.Id).Any(p => p == userId)
-
-            }).ToList();
-
-
-            return tournamentsDtos;
-        }
-
-        /// <exception cref="TournamentNotFoundException"></exception>
-        public async Task<TournamentResponseDTO> GetTournament(int id, string userId)
-        {
-            var existingTournament = await _dbContext.Tournaments
-                .AsNoTracking()
-                .Include(t => t.Teams)
-                .FirstOrDefaultAsync(t => t.Id == id);
-
-            if (existingTournament == null)
-            {
-                throw new TournamentNotFoundException();
-            }
-
-            TournamentResponseDTO existingTournamentDto = new TournamentResponseDTO
-            {
-                Id = existingTournament.Id,
-                Name = existingTournament.Name,
-                Game = existingTournament.Game,
-                MaxTeamNumber = existingTournament.MaxTeamNumber,
-                PlayersPerTeamNumber = existingTournament.PlayersPerTeamNumber,
-                Description = existingTournament.Description,
-                EliminationMode = existingTournament.EliminationMode,
-                EventId = existingTournament.EventId,
-                hasJoined = string.IsNullOrEmpty(userId) ? false : existingTournament.Teams.SelectMany(t => t.Players).Select(p => p.Id).Any(p => p == userId)
-
-            };
-
-            return existingTournamentDto;
-        }
-
-        /// <exception cref="TournamentNameTakenException"></exception>
-        /// <exception cref="EventNotFoundException"></exception>
-        /// <exception cref="TournamentNotFoundException"></exception>
-        public async Task<TournamentResponseDTO> Upsert(TournamentUpsertDTO tournamentToUpsert)
-        {
-
-            //TODO: Check if name condition is only within the same Event or no duplicate at ALL??
-            var tournamentAlreadyExist = tournamentToUpsert.Id == 0
-                ? await _dbContext.Tournaments.AnyAsync(t => t.Name == tournamentToUpsert.Name && t.EventId == tournamentToUpsert.EventId)
-                : await _dbContext.Tournaments.AnyAsync(t => t.Name == tournamentToUpsert.Name && t.EventId == tournamentToUpsert.EventId && t.Id != tournamentToUpsert.Id);
-
-            if (tournamentAlreadyExist)
-            {
+            if (domainTournament != null)
                 throw new TournamentNameTakenException();
-            }
 
-            Tournament upsertTournamentDomain;
-            //Create
-            if (tournamentToUpsert.Id == 0)
+
+            if (tournamentUpsertDTO.Id == 0)
             {
-                var eventExist = await _dbContext.Events.AnyAsync(t => t.Id == tournamentToUpsert.EventId);
-                if (!eventExist)
+                TournamentInfo info = new()
                 {
-                    throw new EventNotFoundException();
-                }
+                    Name = tournamentUpsertDTO.Name,
+                    TournamentType = (TournamentType)tournamentUpsertDTO.TournamentType,
+                    Description = tournamentUpsertDTO.Description,
+                    SignupCap = tournamentUpsertDTO.MaxTeamNumber,
+                    Private = true,
+                    ShowRounds = true,
+                    AcceptAttachments = true,
 
-                upsertTournamentDomain = new Tournament()
-                {
-                    Name = tournamentToUpsert.Name,
-                    Game = tournamentToUpsert.Game,
-                    MaxTeamNumber = tournamentToUpsert.MaxTeamNumber,
-                    PlayersPerTeamNumber = tournamentToUpsert.PlayersPerTeamNumber,
-                    Description = tournamentToUpsert.Description,
-                    EliminationMode = (EliminationTypes)tournamentToUpsert.EliminationMode,
-                    EventId = (int)tournamentToUpsert.EventId
+
                 };
 
-                _dbContext.Tournaments.Add(upsertTournamentDomain);
+                challongeTournament tournament = await _client.CreateTournamentAsync(info);
+
+                if (tournament == null)
+                    throw new Exception();
+
+                domainTournament = new Tournament()
+                {
+                    Id = Convert.ToInt32(tournament.Id),
+                    EventId = (int)tournamentUpsertDTO.EventId,
+                    Name = tournament.Name,
+                    Description = tournament.Description,
+                    Game = tournamentUpsertDTO.Game,
+                    MaxTeamNumber = (int)tournament.SignupCap,
+                    MaxPlayersPerTeam = (int)tournamentUpsertDTO.MaxPlayersPerTeam,
+                    TournamentType = (LANPartyAPI_Core.Enums.TournamentType)tournament.TournamentType,
+                };
+
+
+                _dbContext.Tournaments.Add(domainTournament);
+
             }
             else
             {
-                //Update
-                upsertTournamentDomain = await _dbContext.Tournaments.FindAsync(tournamentToUpsert.Id);
 
-                if (upsertTournamentDomain == null)
-                {
+                domainTournament = await _dbContext.Tournaments.FindAsync(tournamentUpsertDTO.Id);
+                if (domainTournament == null)
                     throw new TournamentNotFoundException();
-                }
 
-                upsertTournamentDomain.Name = tournamentToUpsert.Name;
-                upsertTournamentDomain.Game = tournamentToUpsert.Game;
-                upsertTournamentDomain.MaxTeamNumber = tournamentToUpsert.MaxTeamNumber;
-                upsertTournamentDomain.PlayersPerTeamNumber = tournamentToUpsert.PlayersPerTeamNumber;
-                upsertTournamentDomain.Description = tournamentToUpsert.Description;
-                upsertTournamentDomain.EliminationMode = (EliminationTypes)tournamentToUpsert.EliminationMode;
+                TournamentInfo info = new()
+                {
+                    Name = tournamentUpsertDTO.Name,
+                    TournamentType = (TournamentType)tournamentUpsertDTO.TournamentType,
+                    Description = tournamentUpsertDTO.Description,
+                    SignupCap = tournamentUpsertDTO.MaxTeamNumber,
+                    Private = true,
+                    ShowRounds = true,
+                    AcceptAttachments = true,
+                };
+
+                challongeTournament tournament = await _client.GetTournamentByIdAsync(tournamentUpsertDTO.Id);
+                if (tournament == null)
+                    throw new Exception();
+
+                challongeTournament updatedTournament = await _client.UpdateTournamentAsync(tournament, info);
+
+
+                domainTournament.Name = updatedTournament.Name;
+                domainTournament.Description = updatedTournament.Description;
+                domainTournament.Game = tournamentUpsertDTO.Game;
+                domainTournament.MaxTeamNumber = (int)updatedTournament.SignupCap;
+                domainTournament.MaxPlayersPerTeam = (int)tournamentUpsertDTO.MaxPlayersPerTeam;
+                domainTournament.TournamentType = (LANPartyAPI_Core.Enums.TournamentType)updatedTournament.TournamentType;
+
 
             }
 
             await _dbContext.SaveChangesAsync();
 
-            TournamentResponseDTO responseDTO = new TournamentResponseDTO()
+            var response = new TournamentResponseDTO()
             {
-                Id = upsertTournamentDomain.Id,
-                Name = upsertTournamentDomain.Name,
-                Game = upsertTournamentDomain.Game,
-                MaxTeamNumber = upsertTournamentDomain.MaxTeamNumber,
-                PlayersPerTeamNumber = upsertTournamentDomain.PlayersPerTeamNumber,
-                Description = upsertTournamentDomain.Description,
-                EliminationMode = upsertTournamentDomain.EliminationMode,
-                EventId = upsertTournamentDomain.EventId
+                Id = domainTournament.Id,
+                Description = domainTournament.Description,
+                TournamentType = domainTournament.TournamentType,
+                Game = domainTournament.Game,
+                EventId = (int)tournamentUpsertDTO.EventId,
+                Name = domainTournament.Name,
+                MaxTeamNumber = domainTournament.MaxTeamNumber,
+                MaxPlayersPerTeam = domainTournament.MaxPlayersPerTeam,
             };
 
-            return responseDTO;
+            return response;
         }
 
+        public async Task<object> GetAllEventTournaments(int eventId)
+        {
+            var e = await _dbContext.Events
+                .Include(e => e.Tournaments)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
 
+            var tournaments = e.Tournaments.Select(t => new TournamentResponseDTO()
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Description = t.Description,
+                Game = t.Game,
+                TournamentType = t.TournamentType,
+                MaxTeamNumber = t.MaxTeamNumber,
+                MaxPlayersPerTeam = t.MaxPlayersPerTeam,
+                EventId = (int)t.EventId,
+            }).ToList();
 
-        /// <exception cref="TournamentNotFoundException"></exception>
-        /// <exception cref="TeamLimitReachedException"></exception>
-        /// <exception cref="UserNotInEventException"></exception>
-        /// <exception cref="UserAlreadyJoinedTournamentException"></exception>
-        /// <exception cref="TeamNameAlreadyTakenException"></exception>
+            return tournaments;
+        }
+
+        public async Task<object> GetTournament(int tournamentId)
+        {
+            var tournament = await _dbContext.Tournaments.FindAsync(tournamentId);
+
+            if (tournament == null)
+                throw new TournamentNotFoundException();
+
+            var response = new TournamentResponseDTO()
+            {
+                Id = tournament.Id,
+                Description = tournament.Description,
+                TournamentType = tournament.TournamentType,
+                Game = tournament.Game,
+                EventId = (int)tournament.EventId,
+                Name = tournament.Name,
+                MaxTeamNumber = tournament.MaxTeamNumber,
+                MaxPlayersPerTeam = tournament.MaxPlayersPerTeam,
+            };
+
+            return response;
+        }
+
         public async Task JoinTournamentCreateTeam(TeamUpsertDTO teamUpsert, string userId)
         {
 
@@ -257,6 +219,8 @@ namespace LANPartyAPI_Services
                 throw new TeamNameAlreadyTakenException();
 
 
+
+
             Team team = new Team()
             {
                 Name = teamUpsert.Name,
@@ -265,16 +229,12 @@ namespace LANPartyAPI_Services
             };
 
             tournament.Teams.Add(team);
-
             await _dbContext.SaveChangesAsync();
 
+            var challongeTournament = await _client.GetTournamentByIdAsync((long)tournament.Id);
+            Participant teamParticipant = await _client.CreateParticipantAsync(challongeTournament, new ParticipantInfo { Name = team.Name, });
         }
 
-
-        /// <exception cref="TeamNotFoundException"></exception>
-        /// <exception cref="UserNotInEventException"></exception>
-        /// <exception cref="UserAlreadyJoinedTournamentException"></exception>
-        /// <exception cref="TeamPlayersLimitReachedException"></exception>
         public async Task JoinTournamentExistingTeam(int teamId, string userId)
         {
             Team team = await _dbContext.Teams
@@ -302,7 +262,7 @@ namespace LANPartyAPI_Services
                 throw new UserAlreadyJoinedTournamentException();
 
             //Check if tournament team limit is reached
-            if (team.Players.Count == team.Tournament.PlayersPerTeamNumber)
+            if (team.Players.Count == team.Tournament.MaxPlayersPerTeam)
                 throw new TeamPlayersLimitReachedException();
 
             team.Players.Add(user);
@@ -311,13 +271,11 @@ namespace LANPartyAPI_Services
 
         }
 
-        /// <exception cref="TournamentNotFoundException"></exception>
-        /// <exception cref="UserNotInTournamentException"></exception>
         public async Task QuitTournament(string userId, int tournamentId)
         {
-            Tournament tournamentToQuit = await _dbContext.Tournaments
+            var tournamentToQuit = await _dbContext.Tournaments
                 .Include(t => t.Teams).ThenInclude(team => team.Players)
-                .Include(t => t.Teams).ThenInclude(team => team.Matches_Teams)
+                //.Include(t => t.Teams).ThenInclude(team => team.Matches_Teams)
                 .FirstOrDefaultAsync(tour => tour.Id == tournamentId);
 
             if (tournamentToQuit == null)
@@ -333,7 +291,7 @@ namespace LANPartyAPI_Services
             if (userTeam.Players.Count == 1)
             {
                 //Remove tout les match_teams (matches relations) de la team
-                userTeam.Matches_Teams.RemoveAll(m => m != null);
+                //userTeam.Matches_Teams.RemoveAll(m => m != null);
                 tournamentToQuit.Teams.Remove(userTeam);
             }
             else
@@ -347,6 +305,22 @@ namespace LANPartyAPI_Services
 
             await _dbContext.SaveChangesAsync();
 
+        }
+
+        public async Task DeleteTournament(int tournamentId)
+        {
+
+            var tournamentToDelete = await _dbContext.Tournaments.FindAsync(tournamentId);
+
+            if (tournamentToDelete == null)
+                throw new TournamentNotFoundException();
+
+            var challengeTournament = await _client.GetTournamentByIdAsync(tournamentToDelete.Id);
+
+            await _client.DeleteTournamentAsync(challengeTournament);
+
+            _dbContext.Tournaments.Remove(tournamentToDelete);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

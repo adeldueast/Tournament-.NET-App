@@ -1,35 +1,35 @@
 ﻿using LANPartyAPI_Core.Enums;
 using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LANPartyAPI_Core.Models
 {
     public class Tournament
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(250, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentNameTooLong)]
+        [MaxLength(60)]
         public string Name { get; set; }
 
-        [MaxLength(1000, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentDescriptionTooLong)]
+
+        [MaxLength(1000)]
         public string Description { get; set; }
 
         [Required]
-        [MaxLength(250, ErrorMessage = ExceptionErrorMessages.TournamentExceptions.TournamentGameTooLong)]
+        [MaxLength(100)]
         public string Game { get; set; }
 
         [Required]
         [Range(1, 5)]
-        public int? PlayersPerTeamNumber { get; set; }
+        public int MaxPlayersPerTeam { get; set; }
 
         [Required]
         [Range(1, 100)]
-        public int? MaxTeamNumber { get; set; }
+        public int MaxTeamNumber { get; set; }
 
         public bool hasStarted { get; set; }
-
-        public List<Match> Matches { get; set; }
 
         public List<Team> Teams { get; set; }
 
@@ -37,6 +37,8 @@ namespace LANPartyAPI_Core.Models
         public Event Event { get; set; }
 
         [Required]
-        public EliminationTypes EliminationMode { get; set; }
+        public TournamentType TournamentType { get; set; }
+
+     
     }
 }

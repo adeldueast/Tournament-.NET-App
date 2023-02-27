@@ -1,10 +1,10 @@
-﻿using LANPartyAPI_Core.Enums;
+﻿using Challonge.Api;
+using LANPartyAPI_Core.Enums;
 using LANPartyAPI_Core.Exceptions;
 using LANPartyAPI_Services;
 using LANPartyAPI_Services.DTOs;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using LANPartyAPI_Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -14,45 +14,51 @@ namespace LANPartyAPI.Controllers
     [ApiController]
     public class TournamentsController : UserIdController
     {
-        private readonly ITournamentsService _tournamentsService;
 
-        public TournamentsController(ITournamentsService tournamentsService) => _tournamentsService = tournamentsService;
+        private readonly IChallongeClient _client;
+        private readonly ITournamentsService _tournamentsService;
+        public TournamentsController(ITournamentsService tournamentsService, IChallongeClient client)
+        {
+            _tournamentsService = tournamentsService;
+            _client = client;
+        }
+
+
+        [HttpGet("ChallongeGetById")]
+        public async Task<IActionResult> ChallongeGetById(int Id)
+        {
+            var a = await _client.GetTournamentByIdAsync(1);
+            return Ok(a);
+        }
+
 
         [HttpGet("event/{eventId}")]
         public async Task<IActionResult> GetEventTournaments(int eventId)
         {
             try
             {
-                var userId = await GetUserIdAsync();
-                List<TournamentResponseDTO> tournamentsDtos = await _tournamentsService.GetEventTournaments(eventId, userId);
-                return Ok(tournamentsDtos);
+                var response = await _tournamentsService.GetAllEventTournaments(eventId);
+                return Ok(response);
             }
-            catch (EventNotFoundException)
+            catch (Exception ex)
             {
-                throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.EventExceptions.EventNotFound);
+
+                return StatusCode(500, ex);
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllTournaments()
-        {
-            var userId = await GetUserIdAsync();
-            List<TournamentResponseDTO> tournamentsDtos = await _tournamentsService.GetAllTournaments(userId);
-            return Ok(tournamentsDtos);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetTournament(int id)
+        [HttpGet("{tournamentId}")]
+        public async Task<IActionResult> GetTournament(int tournamentId)
         {
             try
             {
-                var userId = await GetUserIdAsync();
-                TournamentResponseDTO tournamentDto = await _tournamentsService.GetTournament(id, userId);
-                return Ok(tournamentDto);
+                var response = await _tournamentsService.GetTournament(tournamentId);
+                return Ok(response);
             }
-            catch (TournamentNotFoundException)
+            catch (Exception ex)
             {
-                throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.TournamentExceptions.TournamentNotFound);
+
+                return StatusCode(500, ex);
             }
         }
 
@@ -61,31 +67,32 @@ namespace LANPartyAPI.Controllers
         {
             try
             {
-                TournamentResponseDTO upsertedTournamentDto = await _tournamentsService.Upsert(tournamentDto);
+                var response = await _tournamentsService.UpsertTournament(tournamentDto);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
 
-                if (tournamentDto.Id == 0)
-                {
-                    //retourne un 201 et l'endroit ou retrouver la ressource (dans le header)
-                    return CreatedAtAction(nameof(GetTournament), new { id = upsertedTournamentDto.Id }, upsertedTournamentDto);
-                }
-                //No content for Update, (Convention??)
-                return NoContent();
-            }
-            catch (TournamentNameTakenException)
+        }
+
+        [HttpDelete("{tournamentId}")]
+        public async Task<IActionResult> DeleteTournament(int tournamentId)
+        {
+            try
             {
-                throw new HttpResponseException(HttpStatusCode.BadRequest, ExceptionErrorMessages.TournamentExceptions.TournamentNameTaken);
+                await _tournamentsService.DeleteTournament(tournamentId);
+                return Ok();
             }
-            catch (EventNotFoundException)
+            catch (Exception ex)
             {
-                throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.EventExceptions.EventNotFound);
-            }
-            catch (TournamentNotFoundException)
-            {
-                throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.TournamentExceptions.TournamentNotFound);
+                return StatusCode(500, ex);
             }
         }
 
-        [Authorize(AuthenticationSchemes =  JwtBearerDefaults.AuthenticationScheme)]
+        #region
+        [Authorize]
         [HttpPost("join")]
         public async Task<IActionResult> JoinTournamentCreateTeam(TeamUpsertDTO teamDto)
         {
@@ -118,7 +125,7 @@ namespace LANPartyAPI.Controllers
 
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize]
         [HttpPost("join/{teamId}")]
         public async Task<IActionResult> JoinTournamentExistingTeam(int teamId)
         {
@@ -150,7 +157,7 @@ namespace LANPartyAPI.Controllers
 
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize]
         [HttpPost("{tournamentId}/leave")]
         public async Task<IActionResult> QuitTournament(int tournamentId)
         {
@@ -172,5 +179,6 @@ namespace LANPartyAPI.Controllers
             }
 
         }
+        #endregion
     }
 }

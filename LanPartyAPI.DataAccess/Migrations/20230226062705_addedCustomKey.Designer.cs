@@ -4,6 +4,7 @@ using LANPartyAPI_DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LANPartyAPI_DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230226062705_addedCustomKey")]
+    partial class addedCustomKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,7 +129,7 @@ namespace LANPartyAPI_DataAccess.Migrations
                         {
                             Id = "3HEiEUpHH1eTYNzsYOOkjmK1o7Z2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f7914313-3a42-4790-9ba8-116705e27a6d",
+                            ConcurrencyStamp = "35080985-f4e2-4888-9956-a900aa0a3907",
                             Email = "admin@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Adel",
@@ -135,9 +137,9 @@ namespace LANPartyAPI_DataAccess.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "3HEIEUPHH1ETYNZSYOOKJMK1O7Z2",
-                            PasswordHash = "AQAAAAEAACcQAAAAEN3K0ZNv5ndE6sqkUe7reztm3uaF2DVWVjBpMXt6AVb8jdv5m5qcFScejUYaY1Vsmw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEHuCbXKlHEuEIuDWd1qds9bUBV0aD10S3B6n3a5GYXIPvOIJUlls6KQ6Sm7JfKuq2Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6e9469cc-22f1-4f3d-96f8-cde57f580dc1",
+                            SecurityStamp = "d988ad80-1736-4b9f-bba2-dc56b140032c",
                             TwoFactorEnabled = false,
                             UserName = "admin-adel"
                         });
@@ -234,7 +236,7 @@ namespace LANPartyAPI_DataAccess.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
-                    b.Property<int>("TournamentType")
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.Property<bool>("hasStarted")
@@ -277,14 +279,14 @@ namespace LANPartyAPI_DataAccess.Migrations
                         new
                         {
                             Id = "2c5e174e-3b0e-446f-86af-483d56fd7210",
-                            ConcurrencyStamp = "98109238-1a94-41da-beee-bd919c5efccc",
+                            ConcurrencyStamp = "ebd31355-ece1-4b07-8016-19880567b2bd",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "32ffcfa8-7337-4d05-a17e-99d6280a12d5",
-                            ConcurrencyStamp = "2f4b824b-4100-4761-bb8e-01ddebd158d8",
+                            ConcurrencyStamp = "75eb7bb7-2603-4d38-9fb1-eb0b209fbeb3",
                             Name = "Joueur",
                             NormalizedName = "JOUEUR"
                         });
