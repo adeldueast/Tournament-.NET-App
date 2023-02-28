@@ -32,12 +32,14 @@ namespace LANPartyAPI.Controllers
         }
 
 
+        [Authorize]
         [HttpGet("event/{eventId}")]
         public async Task<IActionResult> GetEventTournaments(int eventId)
         {
             try
             {
-                var response = await _tournamentsService.GetAllEventTournaments(eventId);
+                var userId = GetUserIdWhenAuthorize();
+                var response = await _tournamentsService.GetAllEventTournaments(eventId,userId);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -122,6 +124,10 @@ namespace LANPartyAPI.Controllers
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.TeamExceptions.TeamNameAlreadyTaken);
             }
+            catch(Exception e)
+            {
+                return StatusCode(500, e);
+            }
 
         }
 
@@ -176,6 +182,10 @@ namespace LANPartyAPI.Controllers
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.UserExceptions.UserNotInTournament);
 
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e);
             }
 
         }

@@ -15,7 +15,7 @@ namespace LANPartyAPI_Services
     {
         public Task<object> UpsertTournament(TournamentUpsertDTO tournamentUpsertDTO);
         public Task<object> GetTournament(int tournamentId);
-        public Task<object> GetAllEventTournaments(int eventId);
+        public Task<object> GetAllEventTournaments(int eventId, string userId);
         public Task DeleteTournament(int tournamentId);
         public Task JoinTournamentCreateTeam(TeamUpsertDTO teamUpsert, string userId);
         public Task JoinTournamentExistingTeam(int teamId, string userId);
@@ -136,22 +136,25 @@ namespace LANPartyAPI_Services
             return response;
         }
 
-        public async Task<object> GetAllEventTournaments(int eventId)
+        public async Task<object> GetAllEventTournaments(int eventId, string userId)
         {
             var e = await _dbContext.Events
                 .Include(e => e.Tournaments)
+                .ThenInclude(tourn => tourn.Teams)
+                .ThenInclude(team => team.Players)
                 .FirstOrDefaultAsync(e => e.Id == eventId);
 
-            var tournaments = e.Tournaments.Select(t => new TournamentResponseDTO()
+            var tournaments = e.Tournaments.Select(tourn => new TournamentResponseDTO()
             {
-                Id = t.Id,
-                Name = t.Name,
-                Description = t.Description,
-                Game = t.Game,
-                TournamentType = t.TournamentType,
-                MaxTeamNumber = t.MaxTeamNumber,
-                MaxPlayersPerTeam = t.MaxPlayersPerTeam,
-                EventId = (int)t.EventId,
+                Id = tourn.Id,
+                Name = tourn.Name,
+                Description = tourn.Description,
+                Game = tourn.Game,
+                TournamentType = tourn.TournamentType,
+                MaxTeamNumber = tourn.MaxTeamNumber,
+                MaxPlayersPerTeam = tourn.MaxPlayersPerTeam,
+                EventId = (int)tourn.EventId,
+                hasJoined = tourn.Teams.SelectMany(t => t.Players).Any(p => p.Id == userId)
             }).ToList();
 
             return tournaments;
@@ -183,6 +186,7 @@ namespace LANPartyAPI_Services
         {
 
             Tournament tournament = await _dbContext.Tournaments
+                .Include(t => t.Event)
                 .Include(t => t.Teams.Where(t => t.TournamentId == teamUpsert.TournamentId))
                 .ThenInclude(team => team.Players)
                 .FirstOrDefaultAsync(t => t.Id == teamUpsert.TournamentId);
@@ -195,14 +199,6 @@ namespace LANPartyAPI_Services
             //Check if tournament team limit is reached
             if (tournament.Teams.Count == tournament.MaxTeamNumber)
                 throw new TeamLimitReachedException();
-
-
-            //Check if user is register to the event
-            ApplicationUser user = await _dbContext.Users
-                .FirstOrDefaultAsync(user => user.Id == userId && user.Events.Any(e => e.Id == tournament.EventId));
-
-            if (user == null)
-                throw new UserNotInEventException();
 
 
             //Check if user has already joined a tournament (team)
@@ -220,25 +216,42 @@ namespace LANPartyAPI_Services
 
 
 
+            //Check if user is register to the event
+            ApplicationUser user = await _dbContext.Users
+                .Include(u => u.Events)
+                .FirstOrDefaultAsync(user => user.Id == userId);
+
+            var userIsInEvent = user.Events.Any(ev => ev.Id == tournament.EventId);
+            if (!userIsInEvent)
+            {
+                user.Events.Add(tournament.Event);
+                //tournament.Event.Players.Add(user);
+            }
+
+
+            var challongeTournament = await _client.GetTournamentByIdAsync((long)tournament.Id);
+            Participant teamParticipant = await _client.CreateParticipantAsync(challongeTournament, new ParticipantInfo { Name = teamUpsert.Name, });
 
             Team team = new Team()
             {
+                Id = (int)teamParticipant.Id,
                 Name = teamUpsert.Name,
                 Players = new List<ApplicationUser> { user },
-                TournamentId = teamUpsert.TournamentId,
+                //TournamentId = teamUpsert.TournamentId,
             };
 
             tournament.Teams.Add(team);
             await _dbContext.SaveChangesAsync();
 
-            var challongeTournament = await _client.GetTournamentByIdAsync((long)tournament.Id);
-            Participant teamParticipant = await _client.CreateParticipantAsync(challongeTournament, new ParticipantInfo { Name = team.Name, });
+
         }
 
         public async Task JoinTournamentExistingTeam(int teamId, string userId)
         {
             Team team = await _dbContext.Teams
                 .Include(t => t.Tournament)
+                .ThenInclude(tour => tour.Event)
+                .ThenInclude(e => e.Players)
                 .FirstOrDefaultAsync(t => t.Id == teamId);
 
 
@@ -246,12 +259,6 @@ namespace LANPartyAPI_Services
             if (team == null)
                 throw new TeamNotFoundException();
 
-            //Check if user is register to the event
-            ApplicationUser user = await _dbContext.Users
-                .FirstOrDefaultAsync(user => user.Id == userId && user.Events.Any(e => e.Id == team.Tournament.EventId));
-
-            if (user == null)
-                throw new UserNotInEventException();
 
             //Check if user is already in a team
             bool userAlreadyInTeam = team.Tournament.Teams
@@ -265,6 +272,17 @@ namespace LANPartyAPI_Services
             if (team.Players.Count == team.Tournament.MaxPlayersPerTeam)
                 throw new TeamPlayersLimitReachedException();
 
+
+            //Check if user is register to the event
+            ApplicationUser user = await _dbContext.Users.FirstOrDefaultAsync(user => user.Id == userId);
+
+            var isUserInEvent = team.Tournament.Event.Players.Any(p => p.Id == userId);
+            if (!isUserInEvent)
+            {
+                team.Tournament.Event.Players.Add(user);
+            }
+
+
             team.Players.Add(user);
 
             await _dbContext.SaveChangesAsync();
@@ -274,7 +292,8 @@ namespace LANPartyAPI_Services
         public async Task QuitTournament(string userId, int tournamentId)
         {
             var tournamentToQuit = await _dbContext.Tournaments
-                .Include(t => t.Teams).ThenInclude(team => team.Players)
+                .Include(t => t.Teams)
+                .ThenInclude(team => team.Players)
                 //.Include(t => t.Teams).ThenInclude(team => team.Matches_Teams)
                 .FirstOrDefaultAsync(tour => tour.Id == tournamentId);
 
@@ -288,10 +307,21 @@ namespace LANPartyAPI_Services
             if (userTeam == null)
                 throw new UserNotInTournamentException();
 
+
+
+
             if (userTeam.Players.Count == 1)
             {
                 //Remove tout les match_teams (matches relations) de la team
                 //userTeam.Matches_Teams.RemoveAll(m => m != null);
+               
+
+                challongeTournament tournament = await _client.GetTournamentByIdAsync(tournamentId);
+
+                var participant = await _client.GetParticipantAsync(tournament, userTeam.Id);
+
+                await _client.DeleteParticipantAsync(participant);
+
                 tournamentToQuit.Teams.Remove(userTeam);
             }
             else

@@ -127,7 +127,7 @@ namespace LANPartyAPI_DataAccess.Migrations
                         {
                             Id = "3HEiEUpHH1eTYNzsYOOkjmK1o7Z2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f7914313-3a42-4790-9ba8-116705e27a6d",
+                            ConcurrencyStamp = "6c0869fb-725a-45ab-b0e9-a2dae0129d79",
                             Email = "admin@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Adel",
@@ -135,9 +135,9 @@ namespace LANPartyAPI_DataAccess.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "3HEIEUPHH1ETYNZSYOOKJMK1O7Z2",
-                            PasswordHash = "AQAAAAEAACcQAAAAEN3K0ZNv5ndE6sqkUe7reztm3uaF2DVWVjBpMXt6AVb8jdv5m5qcFScejUYaY1Vsmw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEKePjYOabgbB9trlv/n2ege2G13jR/bmXEyMoUWdEf/127piX1tISVFnd/6W97QjJA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6e9469cc-22f1-4f3d-96f8-cde57f580dc1",
+                            SecurityStamp = "5a8f5671-eecf-40f3-98cb-46c231a41a09",
                             TwoFactorEnabled = false,
                             UserName = "admin-adel"
                         });
@@ -188,10 +188,7 @@ namespace LANPartyAPI_DataAccess.Migrations
             modelBuilder.Entity("LANPartyAPI_Core.Models.Team", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -277,14 +274,14 @@ namespace LANPartyAPI_DataAccess.Migrations
                         new
                         {
                             Id = "2c5e174e-3b0e-446f-86af-483d56fd7210",
-                            ConcurrencyStamp = "98109238-1a94-41da-beee-bd919c5efccc",
+                            ConcurrencyStamp = "1e804bca-4556-450a-9ebc-8112d3b8c5b5",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "32ffcfa8-7337-4d05-a17e-99d6280a12d5",
-                            ConcurrencyStamp = "2f4b824b-4100-4761-bb8e-01ddebd158d8",
+                            ConcurrencyStamp = "0ff720c2-41e1-48aa-82cf-dfd9c39a64c4",
                             Name = "Joueur",
                             NormalizedName = "JOUEUR"
                         });

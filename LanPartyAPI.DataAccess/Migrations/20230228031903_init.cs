@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LANPartyAPI_DataAccess.Migrations
 {
-    public partial class addedCustomKey : Migration
+    public partial class init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -209,7 +209,7 @@ namespace LANPartyAPI_DataAccess.Migrations
                     MaxTeamNumber = table.Column<int>(type: "int", nullable: false),
                     hasStarted = table.Column<bool>(type: "bit", nullable: false),
                     EventId = table.Column<int>(type: "int", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false)
+                    TournamentType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -226,8 +226,7 @@ namespace LANPartyAPI_DataAccess.Migrations
                 name: "Teams",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TournamentId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -271,14 +270,14 @@ namespace LANPartyAPI_DataAccess.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "2c5e174e-3b0e-446f-86af-483d56fd7210", "ebd31355-ece1-4b07-8016-19880567b2bd", "Admin", "ADMIN" },
-                    { "32ffcfa8-7337-4d05-a17e-99d6280a12d5", "75eb7bb7-2603-4d38-9fb1-eb0b209fbeb3", "Joueur", "JOUEUR" }
+                    { "2c5e174e-3b0e-446f-86af-483d56fd7210", "1e804bca-4556-450a-9ebc-8112d3b8c5b5", "Admin", "ADMIN" },
+                    { "32ffcfa8-7337-4d05-a17e-99d6280a12d5", "0ff720c2-41e1-48aa-82cf-dfd9c39a64c4", "Joueur", "JOUEUR" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "3HEiEUpHH1eTYNzsYOOkjmK1o7Z2", 0, "35080985-f4e2-4888-9956-a900aa0a3907", "admin@gmail.com", false, "Adel", "Kouaou", false, null, "ADMIN@GMAIL.COM", "3HEIEUPHH1ETYNZSYOOKJMK1O7Z2", "AQAAAAEAACcQAAAAEHuCbXKlHEuEIuDWd1qds9bUBV0aD10S3B6n3a5GYXIPvOIJUlls6KQ6Sm7JfKuq2Q==", null, false, "d988ad80-1736-4b9f-bba2-dc56b140032c", false, "admin-adel" });
+                values: new object[] { "3HEiEUpHH1eTYNzsYOOkjmK1o7Z2", 0, "6c0869fb-725a-45ab-b0e9-a2dae0129d79", "admin@gmail.com", false, "Adel", "Kouaou", false, null, "ADMIN@GMAIL.COM", "3HEIEUPHH1ETYNZSYOOKJMK1O7Z2", "AQAAAAEAACcQAAAAEKePjYOabgbB9trlv/n2ege2G13jR/bmXEyMoUWdEf/127piX1tISVFnd/6W97QjJA==", null, false, "5a8f5671-eecf-40f3-98cb-46c231a41a09", false, "admin-adel" });
 
             migrationBuilder.InsertData(
                 table: "Events",
