@@ -32,8 +32,8 @@ namespace LANPartyAPI_Services
             List<object> matches_response = new();
             foreach (var match in matches)
             {
-                var teamParticipant1 = tournament.Teams.First(team => team.Id == match.Player1Id);
-                var teamParticipant2 = tournament.Teams.First(team => team.Id == match.Player2Id);
+                var teamParticipant1 = tournament.Teams.FirstOrDefault(team => team.Id == match.Player1Id);
+                var teamParticipant2 = tournament.Teams.FirstOrDefault(team => team.Id == match.Player2Id);
 
                 var dto = new
                 {
@@ -42,15 +42,19 @@ namespace LANPartyAPI_Services
                     match.Round,
                     match.Identifier,
                     match.Scores,
-                    Team1 = new { teamParticipant1.Id,  Name = teamParticipant1.Name},  
-                    Team2 = new { teamParticipant2.Id,  Name = teamParticipant2.Name},  
+                    Team1 = teamParticipant1 == null ? null : new { teamParticipant1.Id,  Name = teamParticipant1.Name},  
+                    Team2 = teamParticipant2 == null ? null : new { teamParticipant2.Id,  Name = teamParticipant2.Name},  
                     match.WinnerId,
                     match.LoserId,
                 };
                 matches_response.Add(dto);
             }
 
-            return matches_response;
+            return new
+            {
+                TournamentState=challongeTournament.State,
+                Matches = matches_response
+            };
         }
 
         public async Task<object> GetTeamMatches(int tournamentId, string userId)
