@@ -20,6 +20,7 @@ namespace LANPartyAPI_Services
         public Task JoinTournamentCreateTeam(TeamUpsertDTO teamUpsert, string userId);
         public Task JoinTournamentExistingTeam(int teamId, string userId);
         public Task QuitTournament(string userId, int tournamentId);
+
     }
     public class TournamentsService : ITournamentsService
     {
@@ -71,6 +72,7 @@ namespace LANPartyAPI_Services
                 domainTournament = new Tournament()
                 {
                     Id = Convert.ToInt32(tournament.Id),
+                    Url = tournament.Url,
                     EventId = (int)tournamentUpsertDTO.EventId,
                     Name = tournament.Name,
                     Description = tournament.Description,
@@ -131,6 +133,7 @@ namespace LANPartyAPI_Services
                 Name = domainTournament.Name,
                 MaxTeamNumber = domainTournament.MaxTeamNumber,
                 MaxPlayersPerTeam = domainTournament.MaxPlayersPerTeam,
+                Url = domainTournament.Url,
             };
 
             return response;
@@ -154,7 +157,8 @@ namespace LANPartyAPI_Services
                 MaxTeamNumber = tourn.MaxTeamNumber,
                 MaxPlayersPerTeam = tourn.MaxPlayersPerTeam,
                 EventId = (int)tourn.EventId,
-                hasJoined = tourn.Teams.SelectMany(t => t.Players).Any(p => p.Id == userId)
+                hasJoined = tourn.Teams.SelectMany(t => t.Players).Any(p => p.Id == userId),
+                Url = tourn.Url
             }).ToList();
 
             return tournaments;
@@ -177,6 +181,7 @@ namespace LANPartyAPI_Services
                 Name = tournament.Name,
                 MaxTeamNumber = tournament.MaxTeamNumber,
                 MaxPlayersPerTeam = tournament.MaxPlayersPerTeam,
+                Url = tournament.Url
             };
 
             return response;
@@ -216,6 +221,10 @@ namespace LANPartyAPI_Services
 
 
 
+            var challongeTournament = await _client.GetTournamentByIdAsync((long)tournament.Id);
+            Participant teamParticipant = await _client.CreateParticipantAsync(challongeTournament, new ParticipantInfo { Name = teamUpsert.Name, });
+
+
             //Check if user is register to the event
             ApplicationUser user = await _dbContext.Users
                 .Include(u => u.Events)
@@ -228,9 +237,6 @@ namespace LANPartyAPI_Services
                 //tournament.Event.Players.Add(user);
             }
 
-
-            var challongeTournament = await _client.GetTournamentByIdAsync((long)tournament.Id);
-            Participant teamParticipant = await _client.CreateParticipantAsync(challongeTournament, new ParticipantInfo { Name = teamUpsert.Name, });
 
             Team team = new Team()
             {
@@ -279,6 +285,7 @@ namespace LANPartyAPI_Services
             var isUserInEvent = team.Tournament.Event.Players.Any(p => p.Id == userId);
             if (!isUserInEvent)
             {
+
                 team.Tournament.Event.Players.Add(user);
             }
 
@@ -314,7 +321,7 @@ namespace LANPartyAPI_Services
             {
                 //Remove tout les match_teams (matches relations) de la team
                 //userTeam.Matches_Teams.RemoveAll(m => m != null);
-               
+
 
                 challongeTournament tournament = await _client.GetTournamentByIdAsync(tournamentId);
 
@@ -352,5 +359,7 @@ namespace LANPartyAPI_Services
             _dbContext.Tournaments.Remove(tournamentToDelete);
             await _dbContext.SaveChangesAsync();
         }
+
+      
     }
 }

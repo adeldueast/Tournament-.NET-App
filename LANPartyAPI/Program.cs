@@ -21,6 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<ITournamentsService, TournamentsService>();
 builder.Services.AddScoped<TeamService, TeamService>();
+builder.Services.AddScoped<MatchesService>();
 
 builder.Services.AddChallonge("adeldueast", "vdKadDgnF4Vq38VlcQbqJsyzNtvdTuhmDsZ3TquU");
 

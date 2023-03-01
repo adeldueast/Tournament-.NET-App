@@ -29,6 +29,8 @@ namespace LANPartyAPI_Core.Models
         [Range(1, 100)]
         public int MaxTeamNumber { get; set; }
 
+        public string Url { get; set; }
+
         public bool hasStarted { get; set; }
 
         public List<Team> Teams { get; set; }

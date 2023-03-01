@@ -41,6 +41,8 @@ namespace LANPartyAPI_Services.DTOs
 
         public string Name { get; set; }
 
+        public string Url { get; set; }
+
         public string Description { get; set; }
 
         public string Game { get; set; }
