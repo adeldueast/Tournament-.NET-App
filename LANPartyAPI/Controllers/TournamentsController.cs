@@ -24,13 +24,6 @@ namespace LANPartyAPI.Controllers
         }
 
 
-        [HttpGet("ChallongeGetById")]
-        public async Task<IActionResult> ChallongeGetById(int Id)
-        {
-            var a = await _client.GetTournamentByIdAsync(1);
-            return Ok(a);
-        }
-
 
         [Authorize]
         [HttpGet("event/{eventId}")]
@@ -39,13 +32,13 @@ namespace LANPartyAPI.Controllers
             try
             {
                 var userId = GetUserIdWhenAuthorize();
-                var response = await _tournamentsService.GetAllEventTournaments(eventId,userId);
+                var response = await _tournamentsService.GetAllEventTournaments(eventId, userId);
                 return Ok(response);
             }
             catch (Exception ex)
             {
 
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -60,7 +53,7 @@ namespace LANPartyAPI.Controllers
             catch (Exception ex)
             {
 
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -74,7 +67,7 @@ namespace LANPartyAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
 
         }
@@ -89,9 +82,37 @@ namespace LANPartyAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPost("start/{tournamentId}")]
+        public async Task<IActionResult> StartTournament(int tournamentId)
+        {
+            try
+            {
+                await _tournamentsService.StartTournament(tournamentId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [HttpPost("finalize/{tournamentId}")]
+        public async Task<IActionResult> FinalizeTournament(int tournamentId)
+        {
+            try
+            {
+                await _tournamentsService.FinalizeTournament(tournamentId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
 
         #region
         [Authorize]
@@ -124,7 +145,7 @@ namespace LANPartyAPI.Controllers
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound, ExceptionErrorMessages.TeamExceptions.TeamNameAlreadyTaken);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return StatusCode(500, e);
             }

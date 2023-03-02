@@ -54,6 +54,7 @@ namespace LANPartyAPI_Services.DTOs
         public TournamentType TournamentType { get; set; }
 
         public int EventId { get; set; }
+        public TournamentState State{ get; set; }
 
         public bool hasJoined { get; set; }
     }

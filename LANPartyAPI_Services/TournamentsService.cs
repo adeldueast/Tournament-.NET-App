@@ -17,6 +17,8 @@ namespace LANPartyAPI_Services
         public Task<object> GetTournament(int tournamentId);
         public Task<object> GetAllEventTournaments(int eventId, string userId);
         public Task DeleteTournament(int tournamentId);
+        public Task StartTournament(int tournamentId);
+        public Task FinalizeTournament(int tournamentId);
         public Task JoinTournamentCreateTeam(TeamUpsertDTO teamUpsert, string userId);
         public Task JoinTournamentExistingTeam(int teamId, string userId);
         public Task QuitTournament(string userId, int tournamentId);
@@ -141,6 +143,7 @@ namespace LANPartyAPI_Services
 
         public async Task<object> GetAllEventTournaments(int eventId, string userId)
         {
+            var challongeTournament = await _client.GetTournamentsAsync();
             var e = await _dbContext.Events
                 .Include(e => e.Tournaments)
                 .ThenInclude(tourn => tourn.Teams)
@@ -158,7 +161,8 @@ namespace LANPartyAPI_Services
                 MaxPlayersPerTeam = tourn.MaxPlayersPerTeam,
                 EventId = (int)tourn.EventId,
                 hasJoined = tourn.Teams.SelectMany(t => t.Players).Any(p => p.Id == userId),
-                Url = tourn.Url
+                Url = tourn.Url,
+                State = challongeTournament.First(t => t.Id == tourn.Id).State,
             }).ToList();
 
             return tournaments;
@@ -166,8 +170,10 @@ namespace LANPartyAPI_Services
 
         public async Task<object> GetTournament(int tournamentId)
         {
-            var tournament = await _dbContext.Tournaments.FindAsync(tournamentId);
 
+            var challongeTournament = await _client.GetTournamentByIdAsync(tournamentId);
+
+            var tournament = await _dbContext.Tournaments.FindAsync(tournamentId);
             if (tournament == null)
                 throw new TournamentNotFoundException();
 
@@ -181,7 +187,9 @@ namespace LANPartyAPI_Services
                 Name = tournament.Name,
                 MaxTeamNumber = tournament.MaxTeamNumber,
                 MaxPlayersPerTeam = tournament.MaxPlayersPerTeam,
-                Url = tournament.Url
+                Url = tournament.Url,
+                State = challongeTournament.State
+
             };
 
             return response;
@@ -360,6 +368,15 @@ namespace LANPartyAPI_Services
             await _dbContext.SaveChangesAsync();
         }
 
-      
+        public async Task StartTournament(int tournamentId)
+        {
+            var challongeTournament = await _client.GetTournamentByIdAsync(tournamentId);
+            await _client.StartTournamentAsync(challongeTournament);
+        }
+        public async Task FinalizeTournament(int tournamentId)
+        {
+            var challongeTournament = await _client.GetTournamentByIdAsync(tournamentId);
+            var result = await _client.FinalizeTournamentAsync(challongeTournament);
+        }
     }
 }
